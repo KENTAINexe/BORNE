@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="Icon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TP - Énergie : Approche Fonctionnelle des Systèmes - Borne Escamotable</title>
+    <style>
+        :root {
+            --primary-color: #7ab8ff;
+            --secondary-color: #4ea1ff;
+            --accent-color: #ff8a3d;
+            --bg-color: #0f172a;
+            --card-bg: #111827;
+            --text-color: #e5e7eb;
+            --muted-text: #cbd5e1;
+            --border-color: #2b3a52;
+            --soft-bg: #1f2937;
+            --soft-highlight: #162033;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            color: var(--text-color);
+            line-height: 1.6;
+            padding-bottom: 50px;
+        }
+
+        header {
+            position: relative;
+            background: linear-gradient(135deg, #8ec5ff, #4ea1ff);
+            color: white;
+            min-height: 220px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-top: 6px;
+        }
+
+        .header-base,
+        .header-image {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: transform 0.55s ease, opacity 0.35s ease;
+        }
+
+        .header-base {
+            opacity: 1;
+            transform: translateX(0);
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .header-image {
+            opacity: 0;
+            transform: translateX(100%);
+            pointer-events: none;
+            background: #edf6ff;
+        }
+
+        .header-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            background: #edf6ff;
+        }
+
+        header.is-swapped .header-base {
+            opacity: 0;
+            transform: translateX(-10%);
+        }
+
+        header.is-swapped .header-image {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .header-toggle {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.96);
+            color: #0f172a;
+            font-size: 1.4rem;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
+            transition: opacity 0.25s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            z-index: 2;
+        }
+
+        .header-toggle:hover {
+            transform: translateY(-50%) scale(1.04);
+        }
+
+        .header-toggle--left {
+            left: 18px;
+        }
+
+        .header-toggle--right {
+            right: 18px;
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.18);
+        }
+
+        header.is-swapped .header-toggle--left {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        header.is-swapped .header-toggle--right {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .slide-card {
+            background: linear-gradient(180deg, var(--card-bg) 0%, #0b1220 100%);
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+            margin-bottom: 40px;
+            padding: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 6px solid var(--secondary-color);
+        }
+
+        .slide-card:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 12px 25px rgba(15, 23, 42, 0.38);
+        }
+
+        .slide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .slide-title {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .slide-number {
+            background: var(--primary-color);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .text-content ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .text-content li {
+            padding: 8px 0;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .text-content li::before {
+            content: "▪";
+            color: var(--accent-color);
+            position: absolute;
+            left: 0;
+            font-size: 1.2rem;
+        }
+
+        .media-container {
+            text-align: center;
+            overflow: hidden;
+            border-radius: 12px;
+            background: var(--soft-highlight);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+        }
+
+        .media-container img, .media-container video {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            transform-origin: center;
+        }
+
+        .media-container:hover img, .media-container:hover video {
+            transform: scale(1.03);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+        }
+
+        .steps-list {
+            counter-reset: step-counter;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .steps-list li {
+            counter-increment: step-counter;
+            margin-bottom: 15px;
+            background: var(--soft-bg);
+            padding: 15px 15px 15px 50px;
+            border-radius: 8px;
+            position: relative;
+            border-left: 4px solid var(--accent-color);
+            transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+            color: var(--text-color);
+        }
+
+        .steps-list li:hover {
+            transform: scale(1.02);
+            background: #1b2436;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .steps-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--accent-color);
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: var(--soft-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+        }
+
+        table.data-table th, table.data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        table.data-table th {
+            background-color: var(--primary-color);
+            color: #08121d;
+        }
+
+        table.data-table tr:hover {
+            background-color: #1b2436;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--muted-text);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 50px;
+            color: #0f172a;
+        }
+    </style>
+</head>
+<body>
+
+    <header id="mainHeader">
+        <div class="header-base">
+            <h1>STI2D Ingénierie & Développement Durable</h1>
+            <p>TP - Énergie : Approche Fonctionnelle des Systèmes | Borne Escamotable</p>
+            <p style="font-size: 0.9rem; margin-top: 5px;">Ensemble St Félix-La Salle - Nantes</p>
+        </div>
+
+        <div class="header-image" aria-hidden="true">
+            <img src="Bandeau I2D.png" alt="Bandeau I2D">
+        </div>
+
+        <button class="header-toggle header-toggle--left" type="button" aria-label="Afficher le bandeau I2D">›</button>
+        <button class="header-toggle header-toggle--right" type="button" aria-label="Revenir au bandeau bleu clair">‹</button>
+    </header>
+
+    <div class="container">
+
+        <!-- DIAPO 1 -->
+        <div class="slide-card">
+            <div class="slide-header">
+                <h2 class="slide-title">1. Vue d'ensemble du poste & Fonction du système</h2>
+                <span class="slide-number">Diapo 1 / 7</span>
+            </div>
+            <div class="content-grid">
+                <div class="text-content">
+                    <h3>Fonction principale :</h3>
+                    <ul>
+                        <li>La borne escamotable sert à contrôler l'accès des véhicules à une zone protégée.</li>
+                        <li>Elle peut être relevée pour empêcher le passage ou abaissée pour autoriser l'accès.</li>
+                        <li>Le système permet donc de sécuriser et de réguler une entrée automatiquement.</li>
+                    </ul>
+                    <h3 style="margin-top: 15px;">Éléments identifiés :</h3>
+                    <ul>
+                        <li>Armoire de commande électrique et pneumatique</li>
+                        <li>Borne escamotable</li>
+                        <li>Poste de mise en situation - Voiture autonome</li>
+                        <li>Boîtier de commande latéral</li>
+                        <li>Arrêt d'urgence général</li>
+                    </ul>
+                </div>
+                <div class="media-container">
+                    <!-- Image correspondante de la diapo 1 / Image2 -->
+                    <img src="Image2.jpg" alt="Vue d'ensemble du poste Borne Escamotable">
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPO 2 -->
+        <div class="slide-card" data-slide-index="2">
+            <div class="slide-header">
+                <h2 class="slide-title">2. Principe de fonctionnement</h2>
+                <span class="slide-number">Diapo 2 / 7</span>
+            </div>
+            <div class="content-grid">
+                <div class="text-content">
+                    <ol class="steps-list">
+                        <li>Avancer voiture au capteur.</li>
+                        <li>Appuyer sur le bouton pression vert du côté du véhicule.</li>
+                        <li>Une fois la borne abaissée, avancer le véhicule après le 2<sup>e</sup> capteur.</li>
+                        <li>Attendre la remontée de la borne.</li>
+                    </ol>
+                </div>
+                <div class="media-container">
+                    <img class="slide-gif" data-gif="IMG_8559.gif" alt="Animation de fonctionnement de la borne escamotable" style="max-height: 260px; object-fit: contain;">
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPO 3 -->
+        <div class="slide-card">
+            <div class="slide-header">
+                <h2 class="slide-title">3. Principaux éléments de la chaîne d'énergie (1)</h2>
+                <span class="slide-number">Diapo 3 / 7</span>
+            </div>
+            <div class="content-grid">
+                <div class="text-content">
+                    <h3>Moteur + compresseur</h3>
+                    <p>Formes d'énergie associées :</p>
+                    <ul>
+                        <li>Énergie électrique (entrée)</li>
+                        <li>Énergie mécanique (intermédiaire)</li>
+                        <li>Énergie pneumatique (sortie)</li>
+                    </ul>
+                    <h3 style="margin-top: 15px;">Vérin</h3>
+                    <p>Formes d'énergie associées :</p>
+                    <ul>
+                        <li>Énergie pneumatique (entrée)</li>
+                        <li>Énergie mécanique (sortie)</li>
+                    </ul>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div class="media-container" style="border-radius: 14px; overflow: hidden;">
+                        <img src="M&C.jpg" alt="Moteur et compresseur" style="object-fit: contain; max-height: 170px; width: 100%; border-radius: 12px;">
+                    </div>
+                    <div class="media-container" style="border-radius: 14px; overflow: hidden;">
+                        <img src="Vérin.png" alt="Vérin pneumatique" style="object-fit: contain; max-height: 150px; width: 100%; border-radius: 12px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPO 4 -->
+        <div class="slide-card">
+            <div class="slide-header">
+                <h2 class="slide-title">4. Principaux éléments de la chaîne d'énergie (2)</h2>
+                <span class="slide-number">Diapo 4 / 7</span>
+            </div>
+            <div class="content-grid">
+                <div class="text-content">
+                    <h3>Un contacteur électrique</h3>
+                    <p>Forme d'énergie :</p>
+                    <ul>
+                        <li>Énergie électrique</li>
+                    </ul>
+                    <h3 style="margin-top: 15px;">Distributeur pneumatique</h3>
+                    <p>Formes d'énergie :</p>
+                    <ul>
+                        <li>Énergie pneumatique</li>
+                        <li>Énergie électrique (commande)</li>
+                    </ul>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div class="media-container" style="border-radius: 14px; overflow: hidden;">
+                        <img src="Contacteur.png" alt="Contacteur électrique" style="object-fit: contain; max-height: 170px; width: 100%; border-radius: 12px;">
+                    </div>
+                    <div class="media-container" style="border-radius: 14px; overflow: hidden;">
+                        <img src="DP.png" alt="Distributeur pneumatique" style="object-fit: contain; max-height: 150px; width: 100%; border-radius: 12px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPO 5 -->
+        <div class="slide-card">
+            <div class="slide-header">
+                <h2 class="slide-title">5. Description de la chaîne d'énergie (Diagramme IBD)</h2>
+                <span class="slide-number">Diapo 5 / 7</span>
+            </div>
+            <div style="display: flex; justify-content: center; align-items: center; min-height: 360px; background: #f7fbff; border: 2px solid #cfe4ff; border-radius: 18px; padding: 14px;">
+                <img src="Chaine d'E.jpg" alt="Chaîne d'énergie de la borne escamotable" style="max-width: 82%; max-height: 480px; width: auto; height: auto; object-fit: contain; border-radius: 14px; display: block; box-shadow: 0 10px 24px rgba(22, 54, 104, 0.12);">
+            </div>
+        </div>
+
+        <!-- DIAPO 6 -->
+        <div class="slide-card">
+            <div class="slide-header">
+                <h2 class="slide-title">6. Focus sur le compresseur</h2>
+                <span class="slide-number">Diapo 6 / 7</span>
+            </div>
+            <div class="content-grid">
+                <div class="text-content">
+                    <h3>Principe de fonctionnement :</h3>
+                    <ul>
+                        <li>Le compresseur aspire l'air ambiant puis le comprime afin d'augmenter sa pression.</li>
+                        <li>L'air comprimé est ensuite stocké et/ou distribué vers le circuit pneumatique.</li>
+                        <li>Il permet d'alimenter le vérin qui actionne la borne.</li>
+                    </ul>
+                    <p style="margin-top: 10px;"><strong>Flux d'air :</strong> Air rentrant / Air sortant.</p>
+                </div>
+                <div class="media-container" style="position: relative; display: flex; align-items: flex-start; justify-content: center; min-height: 280px; padding-top: 14px;">
+                    <img src="crbst_piston.gif" alt="Animation piston compresseur" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 150px; max-width: 35%; height: auto; border-radius: 10px; box-shadow: 0 6px 16px rgba(0,0,0,0.18); background: rgba(255,255,255,0.7);">
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPO 7 -->
+        <div class="slide-card">
+            <div class="slide-header">
+                <h2 class="slide-title">7. Caractéristiques principales du compresseur / moteur</h2>
+                <span class="slide-number">Diapo 7 / 7</span>
+            </div>
+            <div>
+                <p style="margin-bottom: 15px;">Données techniques issues de la plaque signalétique (Dürr-Technik, réf. A-061/0835-44) :</p>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Caractéristique</th>
+                            <th>Valeur</th>
+                            <th>Unité</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>La puissance « utile » du moteur électrique (pour f=50Hz)</td>
+                            <td>505</td>
+                            <td>W</td>
+                        </tr>
+                        <tr>
+                            <td>La tension d'alimentation du moteur</td>
+                            <td>230</td>
+                            <td>V (Alternative)</td>
+                        </tr>
+                        <tr>
+                            <td>La vitesse de rotation du moteur électrique</td>
+                            <td>2740</td>
+                            <td>tr/min</td>
+                        </tr>
+                        <tr>
+                            <td>La pression maximale</td>
+                            <td>7</td>
+                            <td>bar</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="media-container" style="margin-top: 20px; padding: 12px; max-width: 520px; margin-left: auto; margin-right: auto;">
+                    <img src="Image1.jpg" alt="Illustration du compresseur" style="max-height: 170px; width: auto; object-fit: contain; display: block; margin: 0 auto;">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>Site web généré fidèlement à partir du diaporama TP - Énergie (Borne Escamotable) | STI2D</p>
+    </footer>
+
+    <script>
+        const gifImg = document.querySelector('.slide-gif');
+        const slides = Array.from(document.querySelectorAll('.slide-card'));
+        const mainHeader = document.getElementById('mainHeader');
+        const leftToggle = document.querySelector('.header-toggle--left');
+        const rightToggle = document.querySelector('.header-toggle--right');
+
+        function setHeaderState(isSwapped) {
+            if (!mainHeader) return;
+            mainHeader.classList.toggle('is-swapped', isSwapped);
+        }
+
+        function isSlideTwoVisible() {
+            const slideTwo = document.querySelector('[data-slide-index="2"]');
+            if (!slideTwo) return false;
+
+            const rect = slideTwo.getBoundingClientRect();
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            return rect.top <= viewportHeight * 0.8 && rect.bottom >= viewportHeight * 0.2;
+        }
+
+        function toggleGif() {
+            if (!gifImg) return;
+
+            const gifSource = gifImg.dataset.gif;
+            const shouldLoadGif = isSlideTwoVisible();
+
+            if (shouldLoadGif) {
+                if (gifSource && gifImg.getAttribute('src') !== gifSource) {
+                    gifImg.setAttribute('src', gifSource);
+                }
+                return;
+            }
+
+            if (gifImg.getAttribute('src')) {
+                gifImg.removeAttribute('src');
+            }
+        }
+
+        function goToNextSlide() {
+            if (window.scrollY <= 20) {
+                slides[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            const viewportCenter = window.innerHeight / 2;
+            let currentIndex = -1;
+
+            slides.forEach((slide, index) => {
+                const rect = slide.getBoundingClientRect();
+                const isCentered = rect.top <= viewportCenter && rect.bottom >= viewportCenter;
+                if (isCentered) currentIndex = index;
+            });
+
+            if (currentIndex === -1) {
+                const firstVisible = slides.findIndex(slide => {
+                    const rect = slide.getBoundingClientRect();
+                    return rect.top < window.innerHeight && rect.bottom > 0;
+                });
+                currentIndex = firstVisible >= 0 ? firstVisible : 0;
+            }
+
+            const nextSlide = slides[currentIndex + 1];
+            if (nextSlide) {
+                nextSlide.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        if (leftToggle) {
+            leftToggle.addEventListener('click', () => setHeaderState(true));
+        }
+
+        if (rightToggle) {
+            rightToggle.addEventListener('click', () => setHeaderState(false));
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.code !== 'Space') return;
+
+            const activeTag = document.activeElement && document.activeElement.tagName;
+            if (activeTag && ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(activeTag)) {
+                return;
+            }
+
+            event.preventDefault();
+            goToNextSlide();
+        });
+
+        window.addEventListener('scroll', toggleGif, { passive: true });
+        window.addEventListener('resize', toggleGif);
+        toggleGif();
+    </script>
+
+</body>
+</html>
